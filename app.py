@@ -1,60 +1,63 @@
-from fastapi import FastAPI, Depends, Request, Form, status
+import typer
+from rich.console import Console
+from rich.table import Table
+from model import Todo
+from database import get_all_todos, delete_todo, insert_todo, complete_todo, update_todo
 
-from starlette.responses import RedirectResponse
-from starlette.templating import Jinja2Templates
+console = Console()
 
-from sqlalchemy.orm import Session
-
-import models
-from database import SessionLocal, engine
-
-models.Base.metadata.create_all(bind=engine)
-
-templates = Jinja2Templates(directory="templates")
-
-app = FastAPI()
+app = typer.Typer()
 
 
-# Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+@app.command(short_help='adds an item')
+def add(task: str, category: str):
+    typer.echo(f"adding {task}, {category}")
+    todo = Todo(task, category)
+    insert_todo(todo)
+    show()
+
+@app.command()
+def delete(position: int):
+    typer.echo(f"deleting {position}")
+    # indices in UI begin at 1, but in database at 0
+    delete_todo(position-1)
+    show()
+
+@app.command()
+def update(position: int, task: str = None, category: str = None):
+    typer.echo(f"updating {position}")
+    update_todo(position-1, task, category)
+    show()
+
+@app.command()
+def complete(position: int):
+    typer.echo(f"complete {position}")
+    complete_todo(position-1)
+    show()
+
+@app.command()
+def show():
+    tasks = get_all_todos()
+    console.print("[bold magenta]Todos[/bold magenta]!", "💻")
+
+    table = Table(show_header=True, header_style="bold blue")
+    table.add_column("#", style="dim", width=6)
+    table.add_column("Todo", min_width=20)
+    table.add_column("Category", min_width=12, justify="right")
+    table.add_column("Done", min_width=12, justify="right")
+
+    def get_category_color(category):
+        COLORS = {'Learn': 'cyan', 'YouTube': 'red', 'Sports': 'cyan', 'Study': 'green'}
+        if category in COLORS:
+            return COLORS[category]
+        return 'white'
+
+    for idx, task in enumerate(tasks, start=1):
+        c = get_category_color(task.category)
+        is_done_str = '✅' if task.status == 2 else '❌'
+        table.add_row(str(idx), task.task, f'[{c}]{task.category}[/{c}]', is_done_str)
+    console.print(table)
 
 
-@app.get("/")
-def home(request: Request, db: Session = Depends(get_db)):
-    todos = db.query(models.Todo).all()
-    return templates.TemplateResponse("base.html",
-                                      {"request": request, "todo_list": todos})
-
-@app.post("/add")
-def add(request: Request, title: str = Form(...), db: Session = Depends(get_db)):
-    new_todo = models.Todo(title=title)
-    db.add(new_todo)
-    db.commit()
-
-    url = app.url_path_for("home")
-    return RedirectResponse(url=url, status_code=status.HTTP_303_SEE_OTHER)
-
-
-@app.get("/update/{todo_id}")
-def update(request: Request, todo_id: int, db: Session = Depends(get_db)):
-    todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
-    todo.complete = not todo.complete
-    db.commit()
-
-    url = app.url_path_for("home")
-    return RedirectResponse(url=url, status_code=status.HTTP_302_FOUND)
-
-
-@app.get("/delete/{todo_id}")
-def delete(request: Request, todo_id: int, db: Session = Depends(get_db)):
-    todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
-    db.delete(todo)
-    db.commit()
-
-    url = app.url_path_for("home")
-    return RedirectResponse(url=url, status_code=status.HTTP_302_FOUND)
+if __name__ == "__main__":
+    app()
