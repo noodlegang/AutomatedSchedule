@@ -1,4 +1,5 @@
 from sqlalchemy import Boolean, Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
 
 from database import Base
 
@@ -6,7 +7,7 @@ from database import Base
 class Lecturer(Base):
     __tablename__ = "lecturers"
 
-    idLecturer = Column("idLecturer", Integer, primary_key=True)
+    id_lecturer = Column("idLecturer", Integer, primary_key=True)
     name = Column("name", String)
     surname = Column("surname", String)
     MON = Column("mondays", Boolean)
@@ -15,93 +16,90 @@ class Lecturer(Base):
     THU = Column("thursdays", Boolean)
     FRI = Column("fridays", Boolean)
 
-    def __init__(self, idLecturer, name, surname):
-        self.idLecturer = idLecturer
+    def __init__(self, id_lecturer, name, surname):
+        self.id_lecturer = id_lecturer
         self.name = name
         self.surname = surname
 
     def __repr__(self):
-        return f"({self.idLecturer}) {self.name} {self.surname}"
+        return f"({self.id_lecturer}) {self.name} {self.surname}"
 
     def __returnID__(self):
-        return f"{self.idLecturer}"
+        return f"{self.id_lecturer}"
 
 
 class Schedule(Base):
     __tablename__ = "schedules"
 
-    idSchedule = Column("idSchedule", Integer, primary_key=True)
-    idRoom = Column("idRoom", Integer, ForeignKey("rooms.idRoom"))
-    idLecturer = Column("idLecturer", Integer, ForeignKey("lecturers.idLecturer"))
-    idPlan = Column("idPlan", Integer, ForeignKey("plans.idPlan"))
+    id_schedule = Column("idSchedule", Integer, primary_key=True)
+    id_room = Column("idRoom", Integer, ForeignKey("rooms.idRoom"))
+    id_lecturer = Column("idLecturer", Integer, ForeignKey("lecturers.idLecturer"))
+    id_plan = Column("idPlan", Integer, ForeignKey("plans.idPlan"))
 
-    def __init__(self, idSchedule, idRoom, idLecturer, idPlan):
-        self.idLecturer = idLecturer
-        self.idSchedule = idSchedule
-        self.idPlan = idPlan
-        self.idRoom = idRoom
+    lecturer = relationship('Lecturer', back_populates='schedules')
+    room = relationship('Room', back_populates='schedules')
+    plan = relationship('Plan', back_populates='schedules')
+
+    def __init__(self, id_schedule, id_room, id_lecturer, id_plan):
+        self.id_lecturer = id_lecturer
+        self.id_schedule = id_schedule
+        self.id_plan = id_plan
+        self.id_room = id_room
 
     def __returnID__(self):
-        return f"{self.idSchedule}"
+        return f"{self.id_schedule}"
 
 
 class Room(Base):
     __tablename__ = "rooms"
 
-    idRoom = Column("idRoom", Integer, primary_key=True)
+    id_room = Column("idRoom", Integer, primary_key=True)
     name = Column("name", Integer)
-    hasComputers = Column("hasComputers", Boolean)
+    has_computers = Column("hasComputers", Boolean)
 
-    def __init__(self, idRoom, name, hasComputers):
-        self.idRoom = idRoom
-        self.hasComputers = hasComputers
+    def __init__(self, id_room, name, has_computers):
+        self.id_room = id_room
+        self.has_computers = has_computers
         self.name = name
 
     def __returnID__(self):
-        return f"{self.idRoom}"
-
-
-class Group(Base):
-    __tablename__ = "groups"
-
-    idGroup = Column("idGroup", Integer, primary_key=True)
-    name = Column("name", String)
-
-    def __init__(self, idGroup, name):
-        self.idGroup = idGroup
-        self.name = name
-
-    def __returnID__(self):
-        return f"{self.idGroup}"
+        return f"{self.id_room}"
 
 
 class Plan(Base):
     __tablename__ = "plans"
 
-    idPlan = Column("idPlan", Integer, primary_key=True)
-    idSubject = Column("idSubject", Integer, ForeignKey("subjects.idSubject"))
-    idRoom = Column("idRoom", Integer, ForeignKey("rooms.idRoom"))
-    credits = Column("credits", Integer)
+    id_plan = Column("idPlan", Integer, primary_key=True)
+    id_subject = Column("idSubject", Integer, ForeignKey("subjects.idSubject"))
+    id_room = Column("idRoom", Integer, ForeignKey("rooms.idRoom"))
+    study_credits = Column("credits", Integer)
 
-    def __init__(self, idPlan, idSubject, idRoom, credits):
-        self.idSubject = idSubject
-        self.idPlan = idPlan
-        self.idRoom = idRoom
-        self.credits = credits
+    room = relationship('Room', back_populates='plans')
+    subject = relationship('Subject', back_populates='plans')
+
+    def __init__(self, id_plan, id_subject, id_room, study_credits):
+        self.id_subject = id_subject
+        self.id_plan = id_plan
+        self.id_room = id_room
+        self.study_credits = study_credits
 
     def __returnID__(self):
-        return f"{self.idPlan}"
+        return f"{self.id_plan}"
 
 
 class Subject(Base):
     __tablename__ = "subjects"
 
-    idSubject = Column("idSubject", Integer, primary_key=True)
+    id_subject = Column("idSubject", Integer, primary_key=True)
     name = Column("name", String)
+    id_lecturer = Column("idLecturer", Integer, ForeignKey("lecturers.idLecturer"))
 
-    def __init__(self, idSubject, name):
-        self.idSubject = idSubject
+    lecturer = relationship('Lecturer', back_populates='subject')
+
+    def __init__(self, id_subject, name, id_lecturer):
+        self.id_subject = id_subject
         self.name = name
+        self.id_lecturer = id_lecturer
 
     def __returnID__(self):
-        return f"{self.idSubject}"
+        return f"{self.id_subject}"
