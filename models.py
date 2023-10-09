@@ -34,16 +34,16 @@ class Schedule(Base):
     id_schedule = Column("idSchedule", Integer, primary_key=True)
     id_room = Column("idRoom", Integer, ForeignKey("rooms.idRoom"))
     id_lecturer = Column("idLecturer", Integer, ForeignKey("lecturers.idLecturer"))
-    id_plan = Column("idPlan", Integer, ForeignKey("plans.idPlan"))
+    id_subject = Column("idSubject", Integer, ForeignKey("subjects.idSubject"))
 
     lecturer = relationship('Lecturer', back_populates='schedules')
     room = relationship('Room', back_populates='schedules')
-    plan = relationship('Plan', back_populates='schedules')
+    subject = relationship('Subject', back_populates='schedules')
 
-    def __init__(self, id_schedule, id_room, id_lecturer, id_plan):
+    def __init__(self, id_schedule, id_room, id_lecturer, id_subject):
         self.id_lecturer = id_lecturer
         self.id_schedule = id_schedule
-        self.id_plan = id_plan
+        self.id_subject = id_subject
         self.id_room = id_room
 
     def __returnID__(self):
@@ -66,40 +66,19 @@ class Room(Base):
         return f"{self.id_room}"
 
 
-class Plan(Base):
-    __tablename__ = "plans"
-
-    id_plan = Column("idPlan", Integer, primary_key=True)
-    id_subject = Column("idSubject", Integer, ForeignKey("subjects.idSubject"))
-    id_room = Column("idRoom", Integer, ForeignKey("rooms.idRoom"))
-    study_credits = Column("credits", Integer)
-
-    room = relationship('Room', back_populates='plans')
-    subject = relationship('Subject', back_populates='plans')
-
-    def __init__(self, id_plan, id_subject, id_room, study_credits):
-        self.id_subject = id_subject
-        self.id_plan = id_plan
-        self.id_room = id_room
-        self.study_credits = study_credits
-
-    def __returnID__(self):
-        return f"{self.id_plan}"
-
-
 class Subject(Base):
     __tablename__ = "subjects"
 
     id_subject = Column("idSubject", Integer, primary_key=True)
     name = Column("name", String)
-    id_lecturer = Column("idLecturer", Integer, ForeignKey("lecturers.idLecturer"))
+    study_credits = Column("credits", Integer)
+    needs_computers = Column("needsComputers", Boolean)
 
-    lecturer = relationship('Lecturer', back_populates='subject')
-
-    def __init__(self, id_subject, name, id_lecturer):
+    def __init__(self, id_subject, name, study_credits, needs_computers):
         self.id_subject = id_subject
         self.name = name
-        self.id_lecturer = id_lecturer
+        self.needs_computers = needs_computers
+        self.study_credits = study_credits
 
     def __returnID__(self):
         return f"{self.id_subject}"
