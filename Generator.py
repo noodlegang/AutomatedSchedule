@@ -144,6 +144,86 @@ def create_subject_list_for_week(subjects_instance):
     return all_subjects_for_week
 
 
+def hall_of_fame(current_schedule_offspring, fitness):
+    if not fitness:
+        return None, -1  # Return None and -1 for empty lists
+
+    best_index = max(range(len(fitness)), key=fitness.__getitem__)
+    best_offspring = current_schedule_offspring[best_index]
+
+    return best_offspring, best_index
+
+
+def crossover(offspring, fitness):
+    if not offspring or not fitness:
+        return {}
+
+    # Calculate the cumulative fitness percentages
+    fitness_sum = sum(fitness)
+    fitness_percentages = [f / fitness_sum for f in fitness]
+    cumulative_percentages = [sum(fitness_percentages[:i + 1]) for i in range(len(fitness_percentages))]
+
+    new_offspring_dict = {}
+    iterations = len(fitness)
+
+    while iterations > 0:
+        parent_indices = random.choices(range(len(offspring)), cumulative_percentages, k=2)
+        parent_one, parent_two = offspring[parent_indices[0]], offspring[parent_indices[1]]
+
+        new_offspring = []
+        for gene_one, gene_two in zip(parent_one, parent_two):
+            if random.choice([True, False]):
+                gene_one, gene_two = gene_two, gene_one
+            rand_length = random.randint(1, len(gene_one))
+            rand_indices = random.sample(range(len(gene_one)), rand_length)
+            new_gene = [gene_one[i] for i in rand_indices] + [gene_two[i] for i in range(len(gene_two)) if
+                                                              i not in rand_indices]
+            new_offspring.append(new_gene)
+
+        new_offspring_dict[iterations] = new_offspring
+        iterations -= 1
+
+    return new_offspring_dict
+
+
+def mutate(offspring, mutation_chance, population_size):
+    new_offspring_dict = {}
+    for count in range(population_size):
+        new_offspring = []
+
+        schedule = offspring[count]  # Fixed indexing from population
+        for gene in schedule:
+            current_gene = gene.copy()  # Create a copy of the gene
+            if random.random() < mutation_chance:
+                index1, index2 = random.sample(range(6), 2)  # Generate unique indices
+                current_gene[index1], current_gene[index2] = current_gene[index2], current_gene[index1]  # Swap values
+            new_offspring.append(current_gene)
+
+        new_offspring_dict[count] = new_offspring
+
+    return new_offspring_dict
+
+
+def absolute_fitness(top_doggie, rooms_list, lecturer_list, subject_list):
+    total_list_fitness = 0
+
+    for offspring in top_doggie:
+        offspring_fitness = 0
+
+        for schedule in offspring:
+            room = find_room(schedule.id_room, rooms_list)
+            lecturer = find_lecturer(schedule.id_lecturer, lecturer_list)
+            subject = find_subject(schedule.id_subject, subject_list)
+
+            if room is not None and lecturer is not None and subject is not None:
+                fitness = current_schedule_fitness(schedule, room, lecturer, subject)
+                offspring_fitness = max(offspring_fitness, fitness)
+
+        total_list_fitness += offspring_fitness
+
+    return total_list_fitness
+
+
 class Generator:
     week = {
         'Monday': [],
@@ -161,14 +241,38 @@ class Generator:
         self.lecturers_instance = copy.deepcopy(lecturers)
 
     def generate(self):
+        teacher_list = copy.deepcopy(self.lecturers_instance)
+        population_size = 20
+        mutation_chance = 0.4
+        top_doggie = None
         x_points = []
         y_points = []
         all_subjects_for_week = create_subject_list_for_week(self.subjects_instance)
-        current_subject_offspring = initial_subject_population(all_subjects_for_week, 20)
+        current_subject_offspring = initial_subject_population(all_subjects_for_week, population_size)
         current_schedule_offspring = initial_schedule_population(current_subject_offspring, self.rooms_instance,
-                                                                 self.lecturers_instance)
-        counter = 20
+                                                                 teacher_list)
+        counter = population_size
         while counter > 0:
             fitness, top_students_dict = current_offspring_fitness(current_schedule_offspring,
-                                                                   self.rooms_instance, self.lecturers_instance,
+                                                                   self.rooms_instance, teacher_list,
                                                                    self.subjects_instance)
+            top_doggie, index = hall_of_fame(current_schedule_offspring, fitness)
+            new_population = crossover(current_schedule_offspring, fitness)
+            new_mutated_population = mutate(new_population, mutation_chance, population_size)
+            current_offspring = copy.deepcopy(new_mutated_population)
+            current_offspring[0] = top_doggie
+            current_offspring[1] = top_doggie
+            current_offspring = copy.deepcopy(current_offspring)
+            top_doggie_fitness = absolute_fitness(top_doggie,
+                                                  self.rooms_instance, teacher_list,
+                                                  self.subjects_instance)
+            counter -= 1
+            gen = population_size - counter
+
+        # Prepare data for export
+        indexes = ['Period: ' + str(x + 1) for x in range(len(teacher_list[0]))]
+        data = {teacher_list[i].name: top_doggie[i] for i in range(len(top_doggie))}
+
+        # Create a DataFrame and export to an Excel file
+        df = pd.DataFrame(data, index=indexes)
+        df.to_excel(r'C:\Users\sofja\Documents\data.xlsx', index=True, header=True)
