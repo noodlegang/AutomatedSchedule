@@ -16,10 +16,18 @@ class Lecturer(Base):
     THU = Column("thursdays", Boolean)
     FRI = Column("fridays", Boolean)
 
-    def __init__(self, id_lecturer, name, surname):
+    schedules = relationship('Schedule', back_populates='lecturers')
+
+    def __init__(self, id_lecturer, name, surname, monday, tuesday,
+                 wednesday, thursday, friday):
         self.id_lecturer = id_lecturer
         self.name = name
         self.surname = surname
+        self.MON = monday
+        self.TUE = tuesday
+        self.WED = wednesday
+        self.THU = thursday
+        self.FRI = friday
 
     def __repr__(self):
         return f"({self.id_lecturer}) {self.name} {self.surname}"
@@ -36,9 +44,9 @@ class Schedule(Base):
     id_lecturer = Column("idLecturer", Integer, ForeignKey("lecturers.idLecturer"))
     id_subject = Column("idSubject", Integer, ForeignKey("subjects.idSubject"))
 
-    lecturer = relationship('Lecturer', back_populates='schedules')
-    room = relationship('Room', back_populates='schedules')
-    subject = relationship('Subject', back_populates='schedules')
+    lecturers = relationship('Lecturer', back_populates='schedules')
+    rooms = relationship('Room', back_populates='schedules')
+    subjects = relationship('Subject', back_populates='schedules')
 
     def __init__(self, id_schedule, id_room, id_lecturer, id_subject):
         self.id_lecturer = id_lecturer
@@ -54,13 +62,13 @@ class Room(Base):
     __tablename__ = "rooms"
 
     id_room = Column("idRoom", Integer, primary_key=True)
-    name = Column("name", Integer)
     has_computers = Column("hasComputers", Boolean)
 
-    def __init__(self, id_room, name, has_computers):
+    schedules = relationship('Schedule', back_populates='rooms')
+
+    def __init__(self, id_room, has_computers):
         self.id_room = id_room
         self.has_computers = has_computers
-        self.name = name
 
     def __returnID__(self):
         return f"{self.id_room}"
@@ -73,6 +81,8 @@ class Subject(Base):
     name = Column("name", String)
     study_credits = Column("credits", Integer)
     needs_computers = Column("needsComputers", Boolean)
+
+    schedules = relationship('Schedule', back_populates='subjects')
 
     def __init__(self, id_subject, name, study_credits, needs_computers):
         self.id_subject = id_subject

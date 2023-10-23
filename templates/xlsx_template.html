@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>XLSX Data</title>
+</head>
+<body>
+    <table>
+        {% for row in data %}
+            <tr>
+                {% for cell in row %}
+                    <td>{{ cell }}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+    <form action="/download_xlsx" method="get">
+        <button type="submit">Download Schedule</button>
+    </form>
+</body>
+</html>

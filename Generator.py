@@ -5,7 +5,7 @@ import pandas as pd
 import copy
 import models
 
-
+# all good
 def initial_subject_population(all_subjects_for_week, population_size):
     subject_list_population = {}
     for i in range(population_size):
@@ -15,11 +15,12 @@ def initial_subject_population(all_subjects_for_week, population_size):
     return subject_list_population
 
 
+# all good
 def initial_schedule_population(current_subject_offspring, rooms_list, lecturers_list):
     schedule_list_population = {}
-    for i, offspring in enumerate(current_subject_offspring, 1):
+    for i, offspring in enumerate(current_subject_offspring.values(), 1):
         created_schedules = []  # Initialize schedules for each offspring
-        id_schedule = 1
+        id_schedule = i
         for subject in offspring:  # Iterate through subjects in the current offspring
             room = random.choice(rooms_list)
             lecturer = random.choice(lecturers_list)
@@ -27,7 +28,7 @@ def initial_schedule_population(current_subject_offspring, rooms_list, lecturers
             created_schedules.append(schedule)
             id_schedule += 1
         schedule_list_population[i] = created_schedules  # Store schedules for the current offspring
-    return schedule_list_population
+        return schedule_list_population
 
 
 """
@@ -45,12 +46,14 @@ def subject_gets_computers(subject, room):
     return True
 
 
+# not good
 def lecturer_available_on_day(offspring, lecturer):
     fitness = 0
     num_parts = 5
     part_size = len(offspring) // num_parts
     my_list = copy.deepcopy(offspring)
     divided_schedule_list = [my_list[i:i + part_size] for i in range(0, len(my_list), part_size)]
+    print(divided_schedule_list)
     for day_num, day in enumerate(divided_schedule_list, 1):
         match day_num:
             case 1:
@@ -64,10 +67,11 @@ def lecturer_available_on_day(offspring, lecturer):
             case 5:
                 if lecturer.FRI: fitness += 1
             case _:
-                print("pizdec")
+                print(str(day_num) + str(lecturer.MON))
     return fitness
 
 
+# overall good me thinks
 def current_schedule_fitness(offspring, room, lecturer, subject):
     fitness = 0
 
@@ -82,7 +86,7 @@ def current_offspring_fitness(schedule_list, rooms_list, lecturer_list, subject_
     all_fitness = []
     all_top_schedules = {}
 
-    for i, offspring in enumerate(schedule_list):
+    for i, offspring in enumerate(schedule_list.values()):
         total_list_fitness = 0
         list_top_schedules = []
         top_fitness = 0
@@ -123,67 +127,86 @@ def find_subject(subject_id, subject_list):
     return next((subject for subject in subject_list if subject.id_subject == subject_id), None)
 
 
+# all good
 def create_subject_list_for_week(subjects_instance):
     all_subjects_for_week = []
     for subject in subjects_instance:
         match subject.study_credits:
             case 1:
                 # 3 hours = 2 lectures (1.5h for lecture)
-                all_subjects_for_week.extend(subject * 2)
+                all_subjects_for_week.extend([subject] * 2)
             case 3:
-                # 9 hours
-                all_subjects_for_week.extend(subject * 6)
+                # 9 hours - 6
+                all_subjects_for_week.extend([subject] * 6)
             case 6:
-                # 18hours
-                all_subjects_for_week.extend(subject * 12)
+                # 18hours - 12
+                all_subjects_for_week.extend([subject] * 12)
             case 12:
-                # 36h
-                all_subjects_for_week.extend(subject * 24)
+                # 36h - 24
+                all_subjects_for_week.extend([subject] * 24)
             case _:
                 print("I hate python")
+    for item in subjects_instance:
+        print(item.name)
     return all_subjects_for_week
 
 
+# all good
 def hall_of_fame(current_schedule_offspring, fitness):
     if not fitness:
         return None, -1  # Return None and -1 for empty lists
 
+    print(fitness)
     best_index = max(range(len(fitness)), key=fitness.__getitem__)
-    best_offspring = current_schedule_offspring[best_index]
+    best_offspring = current_schedule_offspring[best_index + 1]
 
     return best_offspring, best_index
 
 
-def crossover(offspring, fitness):
-    if not offspring or not fitness:
+# not good
+def crossover(offspring, offspring_fitness):
+    if not offspring or not offspring_fitness:
         return {}
 
-    # Calculate the cumulative fitness percentages
-    fitness_sum = sum(fitness)
-    fitness_percentages = [f / fitness_sum for f in fitness]
-    cumulative_percentages = [sum(fitness_percentages[:i + 1]) for i in range(len(fitness_percentages))]
+    total_fitness = sum(offspring_fitness)
+    fitness_percentages = [fit / total_fitness for fit in offspring_fitness]
 
     new_offspring_dict = {}
-    iterations = len(fitness)
+    iterations = len(offspring)
 
     while iterations > 0:
-        parent_indices = random.choices(range(len(offspring)), cumulative_percentages, k=2)
-        parent_one, parent_two = offspring[parent_indices[0]], offspring[parent_indices[1]]
+        parent_indices = [roulette_selection(fitness_percentages) for _ in range(2)]
+        parent_1, parent_2 = offspring[parent_indices[0]], offspring[parent_indices[1]]
 
-        new_offspring = []
-        for gene_one, gene_two in zip(parent_one, parent_two):
-            if random.choice([True, False]):
-                gene_one, gene_two = gene_two, gene_one
-            rand_length = random.randint(1, len(gene_one))
-            rand_indices = random.sample(range(len(gene_one)), rand_length)
-            new_gene = [gene_one[i] for i in rand_indices] + [gene_two[i] for i in range(len(gene_two)) if
-                                                              i not in rand_indices]
-            new_offspring.append(new_gene)
-
+        new_offspring = crossover_genes(parent_1, parent_2)
         new_offspring_dict[iterations] = new_offspring
+
         iterations -= 1
 
     return new_offspring_dict
+
+
+def roulette_selection(fitness_percentages):
+    random_num = random.random()
+    cumulative_prob = 0.0
+    for i, percentage in enumerate(fitness_percentages):
+        cumulative_prob += percentage
+        if random_num <= cumulative_prob:
+            return i
+
+
+def crossover_genes(parent_1, parent_2):
+    new_offspring = []
+    print(parent_1)
+    for gene_1, gene_2 in zip(parent_1, parent_2):
+        gene = []
+        for i in range(len(gene_1)):
+            if random.choice([True, False]):
+                gene.append(gene_2[i])
+            else:
+                gene.append(gene_1[i])
+        new_offspring.append(gene)
+    return new_offspring
 
 
 def mutate(offspring, mutation_chance, population_size):
@@ -225,18 +248,9 @@ def absolute_fitness(top_doggie, rooms_list, lecturer_list, subject_list):
 
 
 class Generator:
-    week = {
-        'Monday': [],
-        'Tuesday': [],
-        'Wednesday': [],
-        'Thursday': [],
-        'Friday': [],
-    }
-    df = pd.DataFrame(week)
 
-    def __init__(self, subjects, schedules, rooms, lecturers):
+    def __init__(self, subjects, rooms, lecturers):
         self.subjects_instance = copy.deepcopy(subjects)
-        self.schedules_instance = copy.deepcopy(schedules)
         self.rooms_instance = copy.deepcopy(rooms)
         self.lecturers_instance = copy.deepcopy(lecturers)
 
