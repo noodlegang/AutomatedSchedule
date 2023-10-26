@@ -5,6 +5,7 @@ import pandas as pd
 import copy
 import models
 
+
 # all good
 def initial_subject_population(all_subjects_for_week, population_size):
     subject_list_population = {}
@@ -28,7 +29,7 @@ def initial_schedule_population(current_subject_offspring, rooms_list, lecturers
             created_schedules.append(schedule)
             id_schedule += 1
         schedule_list_population[i] = created_schedules  # Store schedules for the current offspring
-        return schedule_list_population
+    return schedule_list_population
 
 
 """
@@ -53,7 +54,6 @@ def lecturer_available_on_day(offspring, lecturer):
     part_size = len(offspring) // num_parts
     my_list = copy.deepcopy(offspring)
     divided_schedule_list = [my_list[i:i + part_size] for i in range(0, len(my_list), part_size)]
-    print(divided_schedule_list)
     for day_num, day in enumerate(divided_schedule_list, 1):
         match day_num:
             case 1:
@@ -67,7 +67,8 @@ def lecturer_available_on_day(offspring, lecturer):
             case 5:
                 if lecturer.FRI: fitness += 1
             case _:
-                print(str(day_num) + str(lecturer.MON))
+                pass
+                # print(str(day_num) + str(lecturer.MON))
     return fitness
 
 
@@ -146,8 +147,6 @@ def create_subject_list_for_week(subjects_instance):
                 all_subjects_for_week.extend([subject] * 24)
             case _:
                 print("I hate python")
-    for item in subjects_instance:
-        print(item.name)
     return all_subjects_for_week
 
 
@@ -156,7 +155,6 @@ def hall_of_fame(current_schedule_offspring, fitness):
     if not fitness:
         return None, -1  # Return None and -1 for empty lists
 
-    print(fitness)
     best_index = max(range(len(fitness)), key=fitness.__getitem__)
     best_offspring = current_schedule_offspring[best_index + 1]
 
@@ -165,6 +163,7 @@ def hall_of_fame(current_schedule_offspring, fitness):
 
 # not good
 def crossover(offspring, offspring_fitness):
+    print("Crossover function start")
     if not offspring or not offspring_fitness:
         return {}
 
@@ -175,7 +174,11 @@ def crossover(offspring, offspring_fitness):
     iterations = len(offspring)
 
     while iterations > 0:
-        parent_indices = [roulette_selection(fitness_percentages) for _ in range(2)]
+        parent_indices = []
+        while len(parent_indices) < 2:
+            selected_index = roulette_selection(fitness_percentages)
+            if selected_index != 0 and selected_index not in parent_indices:
+                parent_indices.append(selected_index)
         parent_1, parent_2 = offspring[parent_indices[0]], offspring[parent_indices[1]]
 
         new_offspring = crossover_genes(parent_1, parent_2)
@@ -197,30 +200,28 @@ def roulette_selection(fitness_percentages):
 
 def crossover_genes(parent_1, parent_2):
     new_offspring = []
-    print(parent_1)
     for gene_1, gene_2 in zip(parent_1, parent_2):
         gene = []
-        for i in range(len(gene_1)):
-            if random.choice([True, False]):
-                gene.append(gene_2[i])
-            else:
-                gene.append(gene_1[i])
+        if random.choice([True, False]):
+            gene.append(gene_2)
+        else:
+            gene.append(gene_1)
         new_offspring.append(gene)
     return new_offspring
 
 
 def mutate(offspring, mutation_chance, population_size):
     new_offspring_dict = {}
-    for count in range(population_size):
+    for count in range(1, population_size+1):
         new_offspring = []
 
-        schedule = offspring[count]  # Fixed indexing from population
-        for gene in schedule:
-            current_gene = gene.copy()  # Create a copy of the gene
-            if random.random() < mutation_chance:
-                index1, index2 = random.sample(range(6), 2)  # Generate unique indices
-                current_gene[index1], current_gene[index2] = current_gene[index2], current_gene[index1]  # Swap values
-            new_offspring.append(current_gene)
+        gene = offspring[count]  # Fixed indexing from population
+
+        current_gene = gene.copy()  # Create a copy of the gene
+        if random.random() < mutation_chance:
+            index1, index2 = random.sample(range(6), 2)  # Generate unique indices
+            current_gene[index1], current_gene[index2] = current_gene[index2], current_gene[index1]  # Swap values
+        new_offspring.append(current_gene)
 
         new_offspring_dict[count] = new_offspring
 
@@ -229,18 +230,19 @@ def mutate(offspring, mutation_chance, population_size):
 
 def absolute_fitness(top_doggie, rooms_list, lecturer_list, subject_list):
     total_list_fitness = 0
+    print("absolute fitness")
+    print(top_doggie)
 
-    for offspring in top_doggie:
+    for schedule in top_doggie:
         offspring_fitness = 0
 
-        for schedule in offspring:
-            room = find_room(schedule.id_room, rooms_list)
-            lecturer = find_lecturer(schedule.id_lecturer, lecturer_list)
-            subject = find_subject(schedule.id_subject, subject_list)
+        room = find_room(schedule.id_room, rooms_list)
+        lecturer = find_lecturer(schedule.id_lecturer, lecturer_list)
+        subject = find_subject(schedule.id_subject, subject_list)
 
-            if room is not None and lecturer is not None and subject is not None:
-                fitness = current_schedule_fitness(schedule, room, lecturer, subject)
-                offspring_fitness = max(offspring_fitness, fitness)
+        if room is not None and lecturer is not None and subject is not None:
+            fitness = current_schedule_fitness(top_doggie, room, lecturer, subject)
+            offspring_fitness = max(offspring_fitness, fitness)
 
         total_list_fitness += offspring_fitness
 
