@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import FastAPI, Depends, Request, Form, status
 from fastapi.responses import HTMLResponse
 from fastapi.responses import FileResponse
@@ -118,7 +120,7 @@ def generate_schedule(db: Session = Depends(get_db)):
     return RedirectResponse(url="/display_xlsx")
 
 
-@app.get("/display_xlsx", response_class=HTMLResponse)
+@app.post("/display_xlsx", response_class=HTMLResponse)
 async def display_xlsx():
     # Read the XLSX file
     xlsx_file = r"C:\Users\sofja\Documents\data.xlsx"  # Replace with your XLSX file path

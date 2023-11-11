@@ -51,24 +51,27 @@ def subject_gets_computers(subject, room):
 def lecturer_available_on_day(offspring, lecturer):
     fitness = 0
     num_parts = 5
-    part_size = len(offspring) // num_parts
-    my_list = copy.deepcopy(offspring)
-    divided_schedule_list = [my_list[i:i + part_size] for i in range(0, len(my_list), part_size)]
+    divided_schedule_list = slice_list_in_parts(offspring, 5, None)
     for day_num, day in enumerate(divided_schedule_list, 1):
         match day_num:
             case 1:
                 if lecturer.MON: fitness += 1
+                print(str(day_num) + str(lecturer.MON))
             case 2:
                 if lecturer.TUE: fitness += 1
+                print(str(day_num) + str(lecturer.TUE))
             case 3:
                 if lecturer.WED: fitness += 1
+                print(str(day_num) + str(lecturer.WED))
             case 4:
                 if lecturer.THU: fitness += 1
+                print(str(day_num) + str(lecturer.THU))
             case 5:
                 if lecturer.FRI: fitness += 1
+                print(str(day_num) + str(lecturer.FRI))
             case _:
                 pass
-                # print(str(day_num) + str(lecturer.MON))
+
     return fitness
 
 
@@ -161,9 +164,8 @@ def hall_of_fame(current_schedule_offspring, fitness):
     return best_offspring, best_index
 
 
-# not good
+# all good
 def crossover(offspring, offspring_fitness):
-    print("Crossover function start")
     if not offspring or not offspring_fitness:
         return {}
 
@@ -212,7 +214,7 @@ def crossover_genes(parent_1, parent_2):
 
 def mutate(offspring, mutation_chance, population_size):
     new_offspring_dict = {}
-    for count in range(1, population_size+1):
+    for count in range(1, population_size + 1):
         new_offspring = []
 
         gene = offspring[count]  # Fixed indexing from population
@@ -230,8 +232,6 @@ def mutate(offspring, mutation_chance, population_size):
 
 def absolute_fitness(top_doggie, rooms_list, lecturer_list, subject_list):
     total_list_fitness = 0
-    print("absolute fitness")
-    print(top_doggie)
 
     for schedule in top_doggie:
         offspring_fitness = 0
@@ -249,6 +249,32 @@ def absolute_fitness(top_doggie, rooms_list, lecturer_list, subject_list):
     return total_list_fitness
 
 
+def slice_list_in_parts(my_list, num_of_parts, needed_part):
+    sliced_list = np.array_split(my_list, num_of_parts)
+    if needed_part is None:
+        return sliced_list
+    return sliced_list[needed_part]
+
+
+def prepare_lists_for_df(top_doggie):
+    sliced_list = slice_list_in_parts(top_doggie, 5, None)
+    sliced_list = [item.tolist() if isinstance(item, np.ndarray) else item for item in sliced_list]
+    max_length = 8
+    result_lists = []
+
+    for slice_of_the_list in sliced_list:
+        while len(slice_of_the_list) != max_length:
+            if len(slice_of_the_list) > max_length:
+                slice_of_the_list = random.sample(slice_of_the_list, max_length)
+            if len(slice_of_the_list) < max_length:
+                str1 = "free time"
+                slice_of_the_list.append(str1)
+
+        result_lists.append(slice_of_the_list)
+
+    return result_lists
+
+
 class Generator:
 
     def __init__(self, subjects, rooms, lecturers):
@@ -261,6 +287,7 @@ class Generator:
         population_size = 20
         mutation_chance = 0.4
         top_doggie = None
+        top_doggie_fitness = None
         x_points = []
         y_points = []
         all_subjects_for_week = create_subject_list_for_week(self.subjects_instance)
@@ -272,7 +299,7 @@ class Generator:
             fitness, top_students_dict = current_offspring_fitness(current_schedule_offspring,
                                                                    self.rooms_instance, teacher_list,
                                                                    self.subjects_instance)
-            top_doggie, index = hall_of_fame(current_schedule_offspring, fitness)
+            top_doggie, best_fitness = hall_of_fame(current_schedule_offspring, fitness)
             new_population = crossover(current_schedule_offspring, fitness)
             new_mutated_population = mutate(new_population, mutation_chance, population_size)
             current_offspring = copy.deepcopy(new_mutated_population)
@@ -286,9 +313,27 @@ class Generator:
             gen = population_size - counter
 
         # Prepare data for export
-        indexes = ['Period: ' + str(x + 1) for x in range(len(teacher_list[0]))]
-        data = {teacher_list[i].name: top_doggie[i] for i in range(len(top_doggie))}
+        top_doggie_str = []
+        for schedule in top_doggie:
+            room = find_room(schedule.id_room, self.rooms_instance)
+            lecturer = find_lecturer(schedule.id_lecturer, self.lecturers_instance)
+            subject = find_subject(schedule.id_subject, self.subjects_instance)
+            lecture_str = (
+                        'Room: ' + str(room.id_room) + '; Lecturer: ' + str(lecturer.name) + ' ' + str(lecturer.surname)
+                        + '; Subject: ' + str(subject.name))
+            top_doggie_str.append(lecture_str)
+
+        monday_list, tuesday_list, wednesday_list, thursday_list, friday_list = prepare_lists_for_df(top_doggie_str)
+
+        data = {
+            'Monday': monday_list,
+            'Tuesday': tuesday_list,
+            'Wednesday': wednesday_list,
+            'Thursday': thursday_list,
+            'Friday': friday_list
+        }
 
         # Create a DataFrame and export to an Excel file
-        df = pd.DataFrame(data, index=indexes)
+        df = pd.DataFrame(data, index=[1, 2, 3, 4, 5, 6, 7, 8])
         df.to_excel(r'C:\Users\sofja\Documents\data.xlsx', index=True, header=True)
+        print(top_doggie_fitness)
