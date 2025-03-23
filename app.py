@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse
 from pathlib import Path
 
 from starlette.responses import RedirectResponse
+from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
 from jinja2 import Environment, FileSystemLoader
@@ -37,6 +38,8 @@ def get_db():
     finally:
         db.close()
 
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 env = Environment(loader=FileSystemLoader("templates"))
 template = env.get_template("xlsx_template.html")
