@@ -312,15 +312,15 @@ class Generator:
             counter -= 1
             gen = population_size - counter
 
-        # Prepare data for export
         top_doggie_str = []
         for schedule in top_doggie:
             room = find_room(schedule.id_room, self.rooms_instance)
             lecturer = find_lecturer(schedule.id_lecturer, self.lecturers_instance)
             subject = find_subject(schedule.id_subject, self.subjects_instance)
             lecture_str = (
-                        'Room: ' + str(room.id_room) + '; Lecturer: ' + str(lecturer.name) + ' ' + str(lecturer.surname)
-                        + '; Subject: ' + str(subject.name))
+                    'Room: ' + str(room.id_room) + '; Lecturer: ' + str(lecturer.name)
+                    + ' ' + str(lecturer.surname)
+                    + '; Subject: ' + str(subject.name))
             top_doggie_str.append(lecture_str)
 
         monday_list, tuesday_list, wednesday_list, thursday_list, friday_list = prepare_lists_for_df(top_doggie_str)
@@ -333,7 +333,6 @@ class Generator:
             'Friday': friday_list
         }
 
-        # Create a DataFrame and export to an Excel file
         df = pd.DataFrame(data, index=[1, 2, 3, 4, 5, 6, 7, 8])
         df.to_excel(r'C:\Users\sofja\Documents\data.xlsx', index=True, header=True)
         print(top_doggie_fitness)
