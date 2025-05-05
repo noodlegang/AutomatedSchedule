@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Teacher, Room, and Subject Creation</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='app_style.css') }}">
+</head>
+<body>
+    <h1>Create Teachers, Rooms, and Subjects</h1>
+
+    <div class="form-container">
+        <form action="/teacher/" method="post">
+            <h2>Create a Teacher</h2>
+            <label for="teacher_id">ID:</label>
+            <input type="text" id="teacher_id" name="id_l" required>
+
+            <label for="teacher_name">Name:</label>
+            <input type="text" id="teacher_name" name="name" required>
+
+            <label for="teacher_surname">Surname:</label>
+            <input type="text" id="teacher_surname" name="surname" required>
+
+            <label for="teacher_MON">Monday:</label>
+            <input type="checkbox" id="teacher_MON" name="mon">
+
+            <label for="teacher_TUE">Tuesday:</label>
+            <input type="checkbox" id="teacher_TUE" name="tue">
+
+            <label for="teacher_WED">Wednesday:</label>
+            <input type="checkbox" id="teacher_WED" name="wed">
+
+            <label for="teacher_THU">Thursday:</label>
+            <input type="checkbox" id="teacher_THU" name="thu">
+
+            <label for="teacher_FRI">Friday:</label>
+            <input type="checkbox" id="teacher_FRI" name="fri">
+
+            <button type="submit">Create Teacher</button>
+        </form>
+
+        <form action="/room/" method="post">
+            <h2>Create a Room</h2>
+            <label for="room_id">ID:</label>
+            <input type="text" id="room_id" name="id_r" required>
+
+            <label for="room_has_computers">Has Computers:</label>
+            <input type="checkbox" id="room_has_computers" name="has_computers">
+
+            <button type="submit">Create Room</button>
+        </form>
+
+        <form action="/subject/" method="post">
+            <h2>Create a Subject</h2>
+            <label for="subject_id">ID:</label>
+            <input type="text" id="subject_id" name="id_s" required>
+
+            <label for="subject_name">Name:</label>
+            <input type="text" id="subject_name" name="name" required>
+
+            <label for="subject_study_credits">Study Credits:</label>
+            <input type="number" id="subject_study_credits" name="study_credits" required>
+
+            <label for="subject_needs_computers">Needs Computers:</label>
+            <input type="checkbox" id="subject_needs_computers" name="needs_computers">
+
+            <button type="submit">Create Subject</button>
+        </form>
+    </div>
+
+    <div class="button-container">
+        <form action="/generate/" method="post">
+            <button type="submit">Generate Schedule</button>
+        </form>
+        <form action="/manage_entities/" method="get">
+            <button type="submit" class="manage-entities">Manage Entities</button>
+        </form>
+    </div>
+</body>
+</html>

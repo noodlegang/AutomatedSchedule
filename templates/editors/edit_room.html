@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Room</title>
+</head>
+<body>
+    <h1>Edit Room</h1>
+    <form action="/update_room/{{ room.id_room }}" method="post">
+        <label for="has_computers">Has Computers:</label>
+        <input type="checkbox" id="has_computers" name="has_computers" {% if room.has_computers %}checked{% endif %}>
+        <button type="submit">Update</button>
+    </form>
+    <a href="/">Cancel</a>
+</body>
+</html>

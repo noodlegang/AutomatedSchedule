@@ -10,7 +10,7 @@ import models
 def initial_subject_population(all_subjects_for_week, population_size):
     subject_list_population = {}
     for i in range(population_size):
-        shuffled_subjects = copy.deepcopy(all_subjects_for_week)  # Make a copy to avoid modifying the original list
+        shuffled_subjects = copy.deepcopy(all_subjects_for_week)
         np.random.shuffle(shuffled_subjects)
         subject_list_population[i] = shuffled_subjects
     return subject_list_population
@@ -20,15 +20,15 @@ def initial_subject_population(all_subjects_for_week, population_size):
 def initial_schedule_population(current_subject_offspring, rooms_list, lecturers_list):
     schedule_list_population = {}
     for i, offspring in enumerate(current_subject_offspring.values(), 1):
-        created_schedules = []  # Initialize schedules for each offspring
+        created_schedules = []
         id_schedule = i
-        for subject in offspring:  # Iterate through subjects in the current offspring
+        for subject in offspring:
             room = random.choice(rooms_list)
             lecturer = random.choice(lecturers_list)
             schedule = models.Schedule(id_schedule, room.id_room, lecturer.id_lecturer, subject.id_subject)
             created_schedules.append(schedule)
             id_schedule += 1
-        schedule_list_population[i] = created_schedules  # Store schedules for the current offspring
+        schedule_list_population[i] = created_schedules
     return schedule_list_population
 
 
@@ -102,7 +102,7 @@ def current_offspring_fitness(schedule_list, rooms_list, lecturer_list, subject_
             subject = find_subject(schedule.id_subject, subject_list)
 
             if room is None or lecturer is None or subject is None:
-                continue  # Handle missing data
+                continue
 
             fitness = current_schedule_fitness(offspring, room, lecturer, subject)
 
@@ -156,7 +156,7 @@ def create_subject_list_for_week(subjects_instance):
 # all good
 def hall_of_fame(current_schedule_offspring, fitness):
     if not fitness:
-        return None, -1  # Return None and -1 for empty lists
+        return None, -1
 
     best_index = max(range(len(fitness)), key=fitness.__getitem__)
     best_offspring = current_schedule_offspring[best_index + 1]
@@ -217,11 +217,11 @@ def mutate(offspring, mutation_chance, population_size):
     for count in range(1, population_size + 1):
         new_offspring = []
 
-        gene = offspring[count]  # Fixed indexing from population
+        gene = offspring[count]
 
-        current_gene = gene.copy()  # Create a copy of the gene
+        current_gene = gene.copy()
         if random.random() < mutation_chance:
-            index1, index2 = random.sample(range(6), 2)  # Generate unique indices
+            index1, index2 = random.sample(range(6), 2)
             current_gene[index1], current_gene[index2] = current_gene[index2], current_gene[index1]  # Swap values
         new_offspring.append(current_gene)
 
@@ -335,4 +335,4 @@ class Generator:
 
         df = pd.DataFrame(data, index=[1, 2, 3, 4, 5, 6, 7, 8])
         df.to_excel(r'C:\Users\sofja\Documents\data.xlsx', index=True, header=True)
-        print(top_doggie_fitness)
+        # print(top_doggie_fitness)

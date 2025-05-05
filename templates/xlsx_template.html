@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>XLSX Data</title>
+    <meta charset="UTF-8">
+    <title>Schedule</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='app_style.css') }}">
 </head>
 <body>
+    <h1>"ABC" Schedule</h1>
     <table>
         {% for row in data %}
             <tr>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Lecturer</title>
+</head>
+<body>
+    <h1>Edit Lecturer</h1>
+    <form action="/update/{{ lecturer.id_lecturer }}" method="post">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" value="{{ lecturer.name }}" required>
+        <label for="surname">Surname:</label>
+        <input type="text" id="surname" name="surname" value="{{ lecturer.surname }}" required>
+        <button type="submit">Update</button>
+    </form>
+    <a href="/">Cancel</a>
+</body>
+</html>
