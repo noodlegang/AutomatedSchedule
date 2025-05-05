@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Entities</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='app_style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <div class="list">
+            <h2>Lecturers</h2>
+            <ul>
+                {% for lecturer in lecturers %}
+                <li>
+                    {{ lecturer.id_lecturer }} - {{ lecturer.name }} {{ lecturer.surname }}
+                    <div class="actions">
+                        <a href="/edit_lecturer/{{ lecturer.id_lecturer }}">
+                            <button class="edit-button">Edit</button>
+                        </a>
+                        <form action="/delete_lecturer/{{ lecturer.id_lecturer }}" method="post" class="invisible-form">
+                            <button type="submit" class="delete-button">Delete</button>
+                        </form>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="list">
+            <h2>Rooms</h2>
+            <ul>
+                {% for room in rooms %}
+                <li>
+                    Room ID: {{ room.id_room }}<br>
+                    Has Computers: {{ room.has_computers }}
+                    <div class="actions">
+                        <a href="/edit_room/{{ room.id_room }}">
+                            <button class="edit-button">Edit</button>
+                        </a>
+                        <form action="/delete_room/{{ room.id_room }}" method="post" class="invisible-form">
+                            <button type="submit" class="delete-button">Delete</button>
+                        </form>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="list">
+            <h2>Subjects</h2>
+            <ul>
+                {% for subject in subjects %}
+                <li>
+                    Subject ID: {{ subject.id_subject }}<br>
+                    Name: {{ subject.name }}<br>
+                    <div class="actions">
+                        <a href="/edit_subject/{{ subject.id_subject }}">
+                            <button class="edit-button">Edit</button>
+                        </a>
+                        <form action="/delete_subject/{{ subject.id_subject }}" method="post" class="invisible-form">
+                            <button type="submit" class="delete-button">Delete</button>
+                        </form>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</body>
+
+</html>
